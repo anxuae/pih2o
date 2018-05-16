@@ -11,13 +11,14 @@ Requirements
 ------------
 
 The requirements listed below are the one used for the development of ``pih2o``, but other
-configuration may work fine. The **pump** can be replaced by a ,
+configuration may work fine. The **pump** can be replaced by an electro valve if the tank
+water is upper than the flowers (watering by gravity).
 
 Hardware
 ^^^^^^^^
 
 * 1 Raspberry Pi 2 Model B (or higher)
-* 1 Peristaltic dosing pump (Dc12v)
+* 1 Peristaltic dosing pump (or electro valve)
 * 5 soil moisture sensors for Arduino TE215
 * 1 Analog-to-Digital Converter (ADS1115 16 Bit 16 Byte 4 Channel I2C)
 
