@@ -23,6 +23,15 @@ def values_list_repr(values):
     return "'{}' or '{}'".format("', '".join([str(i) for i in values[:-1]]), values[-1])
 
 
+#################### Flask configuration keys ####################
+
+SECRET_KEY = "n\x00'\x8c\x98\x95\xe9VwRXk\xc7r\x15X"
+SQLALCHEMY_DATABASE_URI = None
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+##################################################################
+
+
 DEFAULT = odict((
     ("GENERAL",
         odict((
@@ -53,12 +62,18 @@ class PiConfigParser(ConfigParser):
         ConfigParser.__init__(self)
         self.filename = osp.abspath(osp.expanduser(filename))
 
+        # Update Flask configuration
+        global SQLALCHEMY_DATABASE_URI
+        SQLALCHEMY_DATABASE_URI = osp.join('sqlite://', osp.dirname(self.filename), 'pih2o.db')
+
         if not osp.isfile(self.filename) or clear:
             LOGGER.info("Generate the configuration file in '%s'", self.filename)
             dirname = osp.dirname(self.filename)
             if not osp.isdir(dirname):
                 os.makedirs(dirname)
             generate_default_config(self.filename)
+            if osp.isfile(SQLALCHEMY_DATABASE_URI):
+                os.remove(SQLALCHEMY_DATABASE_URI)
 
         self.reload()
 

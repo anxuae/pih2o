@@ -50,6 +50,9 @@ def main():
         include_package_data=True,
         install_requires=[
             'RPi.GPIO',
+            'flask',
+            'flask-restful',
+            'flask-sqlalchemy'
         ],
         options={
             'bdist_wheel':
