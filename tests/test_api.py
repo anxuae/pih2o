@@ -13,7 +13,7 @@ def test_server_is_up(client):
 def test_get_config(client):
     resp = client.get('/pih2o/api/v1.0/config')
     assert resp.status_code == 200
-    assert json.loads(resp.data) == {"GENERAL": {"autostart": True}}
+    assert json.loads(resp.data)["GENERAL"]["autostart"] is True
 
 
 def test_set_config(client, headers):
@@ -25,7 +25,7 @@ def test_set_config(client, headers):
 def test_get_config_section(client):
     resp = client.get('/pih2o/api/v1.0/config/GENERAL')
     assert resp.status_code == 200
-    assert json.loads(resp.data) == {"autostart": True}
+    assert json.loads(resp.data)["autostart"] is True
 
 
 def test_set_config_section(client, headers):

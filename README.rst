@@ -112,7 +112,7 @@ upgrading ``pih2o``)::
 
     $ pih2o --reset
 
-See the `default configuration file <https://github.com/anxuae/pih2o/blob/master/docs/release.rst>`_
+See the `default configuration file <https://github.com/anxuae/pih2o/blob/master/docs/config.rst>`_
 for further details.
 
 Circuit diagram
