@@ -24,16 +24,47 @@ class PiApplication(object):
     of the Flask application which serves the RESTful API.
     """
 
-    def __init__(self, config, db):
+    def __init__(self, config):
         self.config = config
-        self.db = db
+
+        LOGGER.debug("Initializing flask instance...")
+        self.flask_app = flask.Flask(pih2o.__name__)
+        self.flask_app.config.from_object('pih2o.config')
+        self.flask_app.app_context().push() # Make app available for database
+
+        @self.flask_app.route('/pih2o')
+        def say_hello():
+            return flask.jsonify( {"name": pih2o.__name__, "version": pih2o.__version__} )
+
+        LOGGER.debug("Initializing the database for measurements...")
+        models.db.init_app(self.flask_app)
+        models.db.create_all()
+
+        LOGGER.debug("Creating RESTful API...")
+        self.api = Api(self.flask_app)
+        root = '/pih2o/api/v1.0'
+        self.api.add_resource(ApiConfig,
+                              root + '/config',
+                              root + '/config/<string:section>',
+                              root + '/config/<string:section>/<string:key>',
+                              endpoint='config', resource_class_args=(config,))
+        self.api.add_resource(ApiControl,
+                              root + '/control',
+                              endpoint='control', resource_class_args=(self,))
+        self.api.add_resource(ApiData,
+                              root + '/data',
+                              endpoint='data', resource_class_args=(models.db,))
 
         atexit.register(self.quit)
 
-    def server_version(self):
-        """Return the application version.
+    def is_running(self):
+        """Return True if the application is running.
         """
-        return pih2o.__version__
+        return True
+
+    def start(self):
+        """Start the application main loop.
+        """
 
     def main_loop(self):
         """Run the watering application loop.
@@ -46,7 +77,7 @@ class PiApplication(object):
         print("Not implemented")
 
 
-def create_app():
+def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
     """Application factory.
     """
     parser = argparse.ArgumentParser(usage="%(prog)s [options]", description=pih2o.__doc__)
@@ -73,7 +104,7 @@ def create_app():
 
     logging.basicConfig(filename=options.log, filemode='w', format='[ %(levelname)-8s] %(name)-18s: %(message)s', level=options.logging)
 
-    config = PiConfigParser("~/.config/pih2o/pih2o.cfg", options.reset)
+    config = PiConfigParser(cfgfile, options.reset)
 
     if options.config:
         LOGGER.info("Editing the automatic plant watering configuration...")
@@ -81,33 +112,11 @@ def create_app():
         sys.exit(0)
     elif not options.reset:
         LOGGER.info("Starting the automatic plant watering application...")
-
-        # Create falsk application
-        app = flask.Flask(pih2o.__name__)
-        app.config.from_object('pih2o.config')
-
-        # Initialize the database
-        models.db.init_app(app)
-        models.db.create_all(app=app)
-
-        # Create PiH2O application
-        pih2o_app = PiApplication(config, models.db)
-
-        # Create the RESTful API
-        api = Api(app)
-        root = '/pih2o/api/v1.0/'
-        api.add_resource(ApiConfig, root + '<string:todo_id>',
-                         endpoint='config', resource_class_args=(config,))
-        api.add_resource(ApiControl, root + '<string:todo_id>',
-                         endpoint='control', resource_class_args=(pih2o_app,))
-        api.add_resource(ApiData, root + '<string:todo_id>',
-                         endpoint='data', resource_class_args=(models.db,))
-
-        return app
+        return PiApplication(config).flask_app # Return the WSGI application
     else:
         sys.exit(0)
 
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(use_reloader=False)
+    app.run()

@@ -17,11 +17,13 @@ except ImportError:
     from ConfigParser import ConfigParser
 
 
-def values_list_repr(values):
-    """Concatenate a list of values to a readable string.
+def safe_eval(value):
+    """Safely evaluate a string.
     """
-    return "'{}' or '{}'".format("', '".join([str(i) for i in values[:-1]]), values[-1])
-
+    try:
+        return ast.literal_eval(value)
+    except (ValueError, SyntaxError):
+        return value
 
 #################### Flask configuration keys ####################
 
@@ -64,7 +66,7 @@ class PiConfigParser(ConfigParser):
 
         # Update Flask configuration
         global SQLALCHEMY_DATABASE_URI
-        SQLALCHEMY_DATABASE_URI = osp.join('sqlite://', osp.dirname(self.filename), 'pih2o.db')
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + osp.join(osp.dirname(self.filename), 'pih2o.db')
 
         if not osp.isfile(self.filename) or clear:
             LOGGER.info("Generate the configuration file in '%s'", self.filename)
@@ -132,11 +134,7 @@ class PiConfigParser(ConfigParser):
         """Get a value from config and try to convert it in a native Python
         type (using the :py:mod:`ast` module).
         """
-        value = self.get(section, option)
-        try:
-            return ast.literal_eval(value)
-        except (ValueError, SyntaxError):
-            return value
+        return safe_eval(self.get(section, option))
 
     def getpath(self, section, option):
         """Get a path from config, evaluate the absolute path from configuration
@@ -147,3 +145,14 @@ class PiConfigParser(ConfigParser):
         if not osp.isabs(path):
             path = osp.join(osp.relpath(osp.dirname(self.filename), '.'), path)
         return path
+
+    def getall(self, section=None):
+        """Return the configuration ad a dictionary.
+        """
+        if section:
+            values = dict((key, safe_eval(value)) for key, value in self._sections[section].items())
+        else:
+            values = {}
+            for name in self._sections:
+                values[name] = self.getall(name)
+        return values

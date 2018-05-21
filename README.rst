@@ -73,6 +73,9 @@ Start the automatic plant watering application using the command::
 
     $ pih2o
 
+The application acts as a daemon running on the Raspberry Pi. It can be controlled thanks
+to an `RESTful API <https://github.com/anxuae/pih2o/blob/master/docs/api.rst>`_.
+
 Install developing version
 --------------------------
 
@@ -109,18 +112,12 @@ upgrading ``pih2o``)::
 
     $ pih2o --reset
 
-Below is the default configuration file:
-
-.. code-block:: ini
-
-    [GENERAL]
-    # Start pih2o at Raspberry Pi startup
-    autostart = True
-
+See the `default configuration file <https://github.com/anxuae/pih2o/blob/master/docs/release.rst>`_
+for further details.
 
 Circuit diagram
 ---------------
 
-.. image:: https://raw.githubusercontent.com/anxuae/piH2O/master/templates/sketch.png
+.. image:: https://raw.githubusercontent.com/anxuae/pih2o/master/templates/sketch.png
    :align: center
    :alt: Electronic sketch

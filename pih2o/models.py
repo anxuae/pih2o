@@ -8,9 +8,9 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 
-class SensorValue(db.Model):
+class Measurement(db.Model):
 
-    __tablename__ = 'sensors_values'
+    __tablename__ = 'measurements'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     sensor = db.Column(db.String)
