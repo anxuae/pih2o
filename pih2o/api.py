@@ -47,15 +47,16 @@ class ApiConfig(Resource):
 
     def put(self, section=None, key=None):
         if section and key:
-            values = marshal({key: request.data}, self.fields[section], envelope=section)
+            values = marshal({key: request.json}, self.fields[section], envelope=section)
         elif section:
-            values = marshal(request.data, self.fields[section], envelope=section)
+            values = marshal(request.json, self.fields[section], envelope=section)
         else:
-            values = marshal(request.data, self.fields)
+            values = marshal(request.json, self.fields)
 
         for section, options in values.items():
             for key, value in options.items():
-                self.cfg.set(section, key, str(value))
+                if value is not None:
+                    self.cfg.set(section, key, str(value))
 
         return '', 204
 

@@ -5,10 +5,13 @@
 """
 
 import sys
+import time
 import atexit
 import threading
 import argparse
 import logging
+from datetime import datetime
+from croniter import croniter
 import flask
 from flask_restful import Api
 import pih2o
@@ -25,16 +28,20 @@ class PiApplication(object):
     """
 
     def __init__(self, config):
+        self._thread = None
+        self._stop = threading.Event()
         self.config = config
 
         LOGGER.debug("Initializing flask instance...")
         self.flask_app = flask.Flask(pih2o.__name__)
         self.flask_app.config.from_object('pih2o.config')
-        self.flask_app.app_context().push() # Make app available for database
+        self.flask_app.app_context().push()  # Make app available for database
 
         @self.flask_app.route('/pih2o')
         def say_hello():
-            return flask.jsonify( {"name": pih2o.__name__, "version": pih2o.__version__} )
+            return flask.jsonify({"name": pih2o.__name__,
+                                  "version": pih2o.__version__,
+                                  "running": self.is_running()})
 
         LOGGER.debug("Initializing the database for measurements...")
         models.db.init_app(self.flask_app)
@@ -60,21 +67,44 @@ class PiApplication(object):
     def is_running(self):
         """Return True if the application is running.
         """
-        return True
+        if self._thread:
+            return self._thread.is_alive()
+        return False
 
     def start(self):
         """Start the application main loop.
         """
+        if self.is_running():
+            raise EnvironmentError("Application thread is already running")
+        self._stop.clear()
+        self._thread = threading.Thread(target=self.main_loop)
+        self._thread.daemon = True
+        self._thread.start()
 
     def main_loop(self):
         """Run the watering application loop.
         """
-        print("Not implemented")
+        cron_pattern = self.config.get('GENERAL', 'record_interval')
+        if not croniter.is_valid(cron_pattern):
+            raise ValueError("Invalid cron pattern '{}'".format(cron_pattern))
+
+        cron = croniter(cron_pattern)
+        next_record = cron.get_next()
+        while not self._stop.is_set():
+            if time.time() < next_record:
+                time.sleep(0.5)
+            else:
+                next_record = cron.get_next()
+                # Take a new measurement
+                print(datetime.now(), "Not implemented")
 
     def quit(self):
         """Quit the watering application.
         """
-        print("Not implemented")
+        if self.is_running():
+            self._stop.set()
+            self._thread.join()
+            LOGGER.debug("Application stopped")
 
 
 def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
@@ -112,7 +142,9 @@ def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
         sys.exit(0)
     elif not options.reset:
         LOGGER.info("Starting the automatic plant watering application...")
-        return PiApplication(config).flask_app # Return the WSGI application
+        app = PiApplication(config)
+        app.start()
+        return app.flask_app  # Return the WSGI application
     else:
         sys.exit(0)
 

@@ -31,16 +31,18 @@ SECRET_KEY = "n\x00'\x8c\x98\x95\xe9VwRXk\xc7r\x15X"
 SQLALCHEMY_DATABASE_URI = None
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-##################################################################
-
+#################### PiH2O configuration keys ####################
 
 DEFAULT = odict((
     ("GENERAL",
         odict((
             ("autostart", (True, "Start pih2o at Raspberry Pi startup")),
+            ("record_interval", ("0 19 * * *", "Time between each humidity measurement")),
         ))
      ),
 ))
+
+##################################################################
 
 
 def generate_default_config(filename):
@@ -150,7 +152,7 @@ class PiConfigParser(ConfigParser):
         """Return the configuration ad a dictionary.
         """
         if section:
-            values = dict((key, safe_eval(value)) for key, value in self._sections[section].items())
+            values = dict((key, safe_eval(value)) for key, value in self.items(section))
         else:
             values = {}
             for name in self._sections:

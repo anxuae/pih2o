@@ -50,6 +50,7 @@ def main():
         include_package_data=True,
         install_requires=[
             'RPi.GPIO',
+            'croniter',
             'flask',
             'flask-restful',
             'flask-sqlalchemy'

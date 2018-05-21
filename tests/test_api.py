@@ -7,7 +7,9 @@ import pih2o
 def test_server_is_up(client):
     resp = client.get('/pih2o')
     assert resp.status_code == 200
-    assert json.loads(resp.data) == {"name": pih2o.__name__, "version": pih2o.__version__}
+    assert json.loads(resp.data) == {"name": pih2o.__name__,
+                                     "version": pih2o.__version__,
+                                     "running": True}
 
 
 def test_get_config(client):
