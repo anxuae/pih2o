@@ -76,15 +76,15 @@ Start the automatic plant watering application using the command::
 The application acts as a daemon running on the Raspberry Pi. It can be controlled thanks
 to an `RESTful API <https://github.com/anxuae/pih2o/blob/master/docs/api.rst>`_.
 
-The ``pih2o`` is scheduled to wake up every a given interval, power the soil moisture
-sensors add take humidity measurement (or threshold id no analog input available).
-Finally sensors are powered off to extend their lifespan.
+The ``pih2o`` is scheduled to wake up every given interval, power the soil moisture
+sensors add take humidity measurement (or threshold if no analog input available).
+Finally the sensors are powered off to extend their lifespan.
 
 Define the record interval
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The record interval (i.e. time between each humidity measurement) is defined
-in the `Configuration`_ using the `crontab syntax <https://fr.wikipedia.org/wiki/Cron`_
+in the `Configuration`_ using the `crontab syntax <https://fr.wikipedia.org/wiki/Cron>`_
 which is summarized here::
 
                       ┌───────────── minute (0 - 59)

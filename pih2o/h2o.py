@@ -16,7 +16,7 @@ import flask
 from flask_restful import Api
 import pih2o
 from pih2o import models
-from pih2o.api import ApiConfig, ApiControl, ApiData
+from pih2o.api import ApiConfig, ApiPump, ApiData
 from pih2o.utils import LOGGER
 from pih2o.config import PiConfigParser
 
@@ -32,10 +32,9 @@ class PiApplication(object):
         self._stop = threading.Event()
         self.config = config
 
-        LOGGER.debug("Initializing flask instance...")
+        LOGGER.debug("Initializing flask instance")
         self.flask_app = flask.Flask(pih2o.__name__)
         self.flask_app.config.from_object('pih2o.config')
-        self.flask_app.app_context().push()  # Make app available for database
 
         @self.flask_app.route('/pih2o')
         def say_hello():
@@ -43,11 +42,12 @@ class PiApplication(object):
                                   "version": pih2o.__version__,
                                   "running": self.is_running()})
 
-        LOGGER.debug("Initializing the database for measurements...")
+        LOGGER.debug("Initializing the database for measurements")
         models.db.init_app(self.flask_app)
-        models.db.create_all()
+        with self.flask_app.app_context():
+            models.db.create_all()
 
-        LOGGER.debug("Creating RESTful API...")
+        LOGGER.debug("Initializing the RESTful API")
         self.api = Api(self.flask_app)
         root = '/pih2o/api/v1.0'
         self.api.add_resource(ApiConfig,
@@ -55,34 +55,35 @@ class PiApplication(object):
                               root + '/config/<string:section>',
                               root + '/config/<string:section>/<string:key>',
                               endpoint='config', resource_class_args=(config,))
-        self.api.add_resource(ApiControl,
-                              root + '/control',
-                              endpoint='control', resource_class_args=(self,))
+        self.api.add_resource(ApiPump,
+                              root + '/pump',
+                              endpoint='pump', resource_class_args=(self,))
         self.api.add_resource(ApiData,
                               root + '/data',
                               endpoint='data', resource_class_args=(models.db,))
 
-        atexit.register(self.quit)
+        atexit.register(self.shutdown)
 
     def is_running(self):
-        """Return True if the application is running.
+        """Return True if the watering daemon is running.
         """
         if self._thread:
             return self._thread.is_alive()
         return False
 
     def start(self):
-        """Start the application main loop.
+        """Start the watering daemon main loop.
         """
         if self.is_running():
-            raise EnvironmentError("Application thread is already running")
+            raise EnvironmentError("Watering daemon is already running")
         self._stop.clear()
         self._thread = threading.Thread(target=self.main_loop)
         self._thread.daemon = True
         self._thread.start()
+        LOGGER.debug("Watering daemon started")
 
     def main_loop(self):
-        """Run the watering application loop.
+        """Watering daemon loop.
         """
         cron_pattern = self.config.get('GENERAL', 'record_interval')
         if not croniter.is_valid(cron_pattern):
@@ -91,20 +92,32 @@ class PiApplication(object):
         cron = croniter(cron_pattern)
         next_record = cron.get_next()
         while not self._stop.is_set():
-            if time.time() < next_record:
-                time.sleep(0.5)
-            else:
-                next_record = cron.get_next()
-                # Take a new measurement
-                print(datetime.now(), "Not implemented")
+            if self._stop.wait(next_record - time.time()):
+                break  # Stop requested
 
-    def quit(self):
-        """Quit the watering application.
+            # Take a new measurement
+            next_record = cron.get_next()
+
+            # Dummy measurements
+            import random
+            with self.flask_app.app_context():
+                for i in range(4):
+                    humidity = random.randint(2, 99)
+                    measurement = models.Measurement(sensor=hex(i),
+                                                     humidity=humidity,
+                                                     triggered=humidity < 30,
+                                                     record_time=datetime.now())
+                    LOGGER.debug("Add new measurement for sensor '%s'", i)
+                    models.db.session.add(measurement)
+                models.db.session.commit()
+
+    def shutdown(self):
+        """Quit the watering daemon.
         """
         if self.is_running():
             self._stop.set()
             self._thread.join()
-            LOGGER.debug("Application stopped")
+            LOGGER.debug("Watering daemon stopped")
 
 
 def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):

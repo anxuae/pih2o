@@ -75,8 +75,8 @@ and the address is truncated (URL without scheme, domain and port).
     PUT /pih2o/api/v1.0/config/<section>/<option> -d '<value>'
 
 
-``control``
-^^^^^^^^^^^
+``pump``
+^^^^^^^^
 
 ::
 

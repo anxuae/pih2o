@@ -5,8 +5,9 @@
 
 from datetime import datetime
 from flask import request
-from flask_restful import Resource, fields, marshal, reqparse
+from flask_restful import Resource, fields, marshal
 from pih2o import config
+from pih2o import models
 
 try:
     unicode
@@ -61,7 +62,7 @@ class ApiConfig(Resource):
         return '', 204
 
 
-class ApiControl(Resource):
+class ApiPump(Resource):
 
     def __init__(self, app):
         Resource.__init__(self)
@@ -78,4 +79,14 @@ class ApiData(Resource):
         self.db = db
 
     def get(self):
-        return "Not implemented"
+        # Get query string filters
+        querry_filters = {}
+        for column in models.Measurement.__table__.columns:
+            if request.args.get(column.key):
+                querry_filters[column.key] = request.args.get(column.key)
+
+        # Build query
+        query = self.db.session.query(models.Measurement)
+        for key, value in querry_filters.items():
+            query = query.filter(getattr(models.Measurement, key).like("%s" % value))
+        return [measure.serialize() for measure in query.all()]
