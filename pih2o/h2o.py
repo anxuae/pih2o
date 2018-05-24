@@ -64,7 +64,7 @@ class PiApplication(object):
                               root + '/measurements',
                               endpoint='measurements', resource_class_args=(models.db,))
 
-        atexit.register(self.shutdown)
+        atexit.register(self.shutdown_daemon)
 
     def log_exception(self, sender, exception, **extra):
         """Log an exception"""
@@ -77,7 +77,7 @@ class PiApplication(object):
             return self._thread.is_alive()
         return False
 
-    def start(self):
+    def start_daemon(self):
         """Start the watering daemon main loop.
         """
         if self.is_running():
@@ -117,7 +117,7 @@ class PiApplication(object):
                     models.db.session.add(measurement)
                 models.db.session.commit()
 
-    def shutdown(self):
+    def shutdown_daemon(self):
         """Quit the watering daemon.
         """
         if self.is_running():
@@ -162,7 +162,7 @@ def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
     elif not options.reset:
         LOGGER.info("Starting the automatic plant watering application...")
         app = PiApplication(config)
-        app.start()
+        app.start_daemon()
         return app.flask_app  # Return the WSGI application
     else:
         sys.exit(0)

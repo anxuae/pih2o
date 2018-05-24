@@ -40,6 +40,19 @@ DEFAULT = odict((
             ("record_interval", ("0 19 * * *", "Time between each humidity measurement")),
         ))
      ),
+    ("PUMP",
+        odict((
+            ("pin", (7, "Physical GPIO pin where the pump is connected (or electro-valve)")),
+            ("duration", (60, "Watering duration in seconds when the pump is started")),
+        ))
+     ),
+    ("SENSORS",
+        odict((
+            ("analog_pins", ((1, 2, 3, 4), "ADS1115 channels used to read the humidity level (4 max)")),
+            ("digital_pins", ((11, 13, 15, 16), "Physical GPIO pins to detect threshold exceeded (4 max)")),
+            ("analog_threshold", (20, "Percentage under which a sensor is considered as triggered")),
+        ))
+     ),
 ))
 
 ##################################################################

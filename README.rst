@@ -29,6 +29,7 @@ Software
 
 * Python ``3.5.3``
 * RPi.GPIO ``0.6.3``
+* adafruit-ads1x15 ``1.0.2``
 * croniter ``0.3.23``
 * blinker ``1.4``
 * flask ``1.0.2``
@@ -97,6 +98,20 @@ which is summarized here::
                       │ │ │ │ │
                       │ │ │ │ │
     record_interval = * * * * *
+
+Pump triggering strategy
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The watering time is defined in the `Configuration`_. The rational to dissociate the pump stop
+from the humidity level measured is the soil slow absorption.
+
+Two modes are available to detect if watering is required by your plants depending on your
+configuration.
+
+ - **analog channels available**: the pump is triggered if more than half sensors goes below the
+   defined humidity threshold (in %).
+ - **else only digital channels**: the pump is triggered if more than half sensors is triggered
+   (in this case threshold is generally defined manually directly on the sensor).
 
 Install developing version
 --------------------------

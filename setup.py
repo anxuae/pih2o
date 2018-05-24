@@ -50,6 +50,7 @@ def main():
         include_package_data=True,
         install_requires=[
             'RPi.GPIO',
+            'adafruit-ads1x15',
             'croniter',
             'blinker',
             'flask',

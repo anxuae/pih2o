@@ -155,3 +155,19 @@ and the address is truncated (URL without scheme, domain and port).
             "triggered": false
         }
     ]
+
+**Get measurements using several query string filters**::
+
+    GET /pih2o/api/v1.0/measurements?sensor=0x3&humidity=44.0'
+
+.. code-block:: json
+
+    [
+        {
+            "humidity": 44.0,
+            "id": 10600,
+            "record_time": "2018-05-24 20:16:00",
+            "sensor": "0x3",
+            "triggered": true
+        }
+    ]

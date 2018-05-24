@@ -8,7 +8,7 @@ from sqlalchemy import desc
 from flask import request
 from flask_restful import Resource, fields, marshal
 from pih2o import config
-from pih2o import models
+from pih2o.models import Measurement
 
 try:
     unicode
@@ -24,6 +24,7 @@ PYTHON_TYPE_TO_FIELD = {
     float: fields.Float,
     int: fields.Integer,
     list: fields.List,
+    tuple: fields.List,
     bool: fields.Boolean
 }
 
@@ -92,10 +93,10 @@ class ApiMeasurements(Resource):
 
         # Get query string filters
         querry_filters = {}
-        for column in models.Measurement.__table__.columns:
+        for column in Measurement.__table__.columns:
             value = request.args.get(column.key)
             if value:
-                if column.key == 'record_time':
+                if column == Measurement.record_time:
                     try:
                         value = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
                     except ValueError as ex:
@@ -103,13 +104,13 @@ class ApiMeasurements(Resource):
                 querry_filters[column.key] = value
 
         # Build query
-        query = self.db.session.query(models.Measurement)
+        query = self.db.session.query(Measurement)
         for key, value in querry_filters.items():
-            if key == 'record_time':
+            if key == Measurement.record_time.key:
                 query = query.filter(
-                    getattr(models.Measurement, key) >= value,
-                    getattr(models.Measurement, key) < value + timedelta(seconds=1))
+                    getattr(Measurement, key) >= value,
+                    getattr(Measurement, key) < value + timedelta(seconds=1))
             else:
-                query = query.filter(getattr(models.Measurement, key).like(value))
+                query = query.filter(getattr(Measurement, key).like(value))
 
-        return [measure.serialize() for measure in query.order_by(desc(models.Measurement.record_time)).limit(limit).all()], 200
+        return [measure.serialize() for measure in query.order_by(desc(Measurement.record_time)).limit(limit).all()], 200
