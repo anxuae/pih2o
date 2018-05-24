@@ -3,7 +3,8 @@
 """Pih2o RESTful API.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from sqlalchemy import desc
 from flask import request
 from flask_restful import Resource, fields, marshal
 from pih2o import config
@@ -40,11 +41,11 @@ class ApiConfig(Resource):
 
     def get(self, section=None, key=None):
         if section and key:
-            return self.cfg.gettyped(section, key)
+            return self.cfg.gettyped(section, key), 200
         elif section:
-            return self.cfg.getall(section)
+            return self.cfg.getall(section), 200
         else:
-            return self.cfg.getall()
+            return self.cfg.getall(), 200
 
     def put(self, section=None, key=None):
         if section and key:
@@ -69,24 +70,46 @@ class ApiPump(Resource):
         self.app = app
 
     def get(self):
-        return "Not implemented"
+        return {"message": "Not implemented"}, 501
 
 
-class ApiData(Resource):
+class ApiMeasurements(Resource):
 
     def __init__(self, db):
         Resource.__init__(self)
         self.db = db
 
     def get(self):
+        # Get limit of returned value
+        limit = request.args.get('lim')
+        if limit:
+            try:
+                limit = int(limit)
+            except ValueError as ex:
+                return {"message": str(ex)}, 400
+        else:
+            limit = 10
+
         # Get query string filters
         querry_filters = {}
         for column in models.Measurement.__table__.columns:
-            if request.args.get(column.key):
-                querry_filters[column.key] = request.args.get(column.key)
+            value = request.args.get(column.key)
+            if value:
+                if column.key == 'record_time':
+                    try:
+                        value = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                    except ValueError as ex:
+                        return {"message": str(ex)}, 400
+                querry_filters[column.key] = value
 
         # Build query
         query = self.db.session.query(models.Measurement)
         for key, value in querry_filters.items():
-            query = query.filter(getattr(models.Measurement, key).like("%s" % value))
-        return [measure.serialize() for measure in query.all()]
+            if key == 'record_time':
+                query = query.filter(
+                    getattr(models.Measurement, key) >= value,
+                    getattr(models.Measurement, key) < value + timedelta(seconds=1))
+            else:
+                query = query.filter(getattr(models.Measurement, key).like(value))
+
+        return [measure.serialize() for measure in query.order_by(desc(models.Measurement.record_time)).limit(limit).all()], 200

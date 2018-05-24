@@ -51,6 +51,7 @@ def main():
         install_requires=[
             'RPi.GPIO',
             'croniter',
+            'blinker',
             'flask',
             'flask-restful',
             'flask-sqlalchemy'

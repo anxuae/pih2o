@@ -5,8 +5,8 @@ This document describe the API exposed by ``pih2o``. The syntax used is close
 to the ``curl`` one, but for readability reasons, not all options are written
 and the address is truncated (URL without scheme, domain and port).
 
-``server``
-^^^^^^^^^^
+``pih2o``
+^^^^^^^^^
 
 **Server information**::
 
@@ -82,9 +82,76 @@ and the address is truncated (URL without scheme, domain and port).
 
     GET
 
-``data``
-^^^^^^^^
+``measurements``
+^^^^^^^^^^^^^^^^
 
-::
+**Get the 10 last measurements (by default only 10 measurements are returned for any request)**::
 
-    GET
+    GET /pih2o/api/v1.0/measurements'
+
+.. code-block:: json
+
+    [
+        {
+            "humidity": 44.0,
+            "id": 10600,
+            "record_time": "2018-05-24 20:16:00",
+            "sensor": "0x3",
+            "triggered": false
+        },
+
+        ...
+
+        {
+            "humidity": 26.0,
+            "id": 10591,
+            ...
+        }
+    ]
+
+**Get the 100 last measurements**::
+
+    GET /pih2o/api/v1.0/measurements?lim=100'
+
+.. code-block:: json
+
+    [
+        {
+            "humidity": 44.0,
+            "id": 10600,
+            "record_time": "2018-05-24 20:16:00",
+            "sensor": "0x3",
+            "triggered": false
+        },
+
+        ...
+
+        {
+            "humidity": 26.0,
+            "id": 10591,
+            ...
+        }
+    ]
+
+**Get measurements from a specific sensor**::
+
+    GET /pih2o/api/v1.0/measurements?sensor=0x3'
+
+.. code-block:: json
+
+    [
+        {
+            "humidity": 44.0,
+            "id": 10600,
+            "record_time": "2018-05-24 20:16:00",
+            "sensor": "0x3",
+            "triggered": true
+        },
+        {
+            "humidity": 67.0,
+            "id": 10530,
+            "record_time": "2018-04-24 20:16:00",
+            "sensor": "0x3",
+            "triggered": false
+        }
+    ]

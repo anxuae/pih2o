@@ -20,7 +20,7 @@ Hardware
 
 * 1 Raspberry Pi 2 Model B (or higher)
 * 1 Peristaltic dosing pump (or electro valve)
-* 4 soil moisture sensors (Arduino TE215)
+* 1 to 4 soil moisture sensors (Arduino TE215)
 * 1 Analog-to-Digital Converter (ADS1115 16 Bit 4 Channel I2C)
 * 1 Relay module (5V DC)
 
@@ -29,6 +29,8 @@ Software
 
 * Python ``3.5.3``
 * RPi.GPIO ``0.6.3``
+* croniter ``0.3.23``
+* blinker ``1.4``
 * flask ``1.0.2``
 * flask-restful ``0.3.6``
 * flask-sqlalchemy ``2.3.2``
@@ -77,7 +79,7 @@ The application acts as a daemon running on the Raspberry Pi. It can be controll
 to an `RESTful API <https://github.com/anxuae/pih2o/blob/master/docs/api.rst>`_.
 
 The ``pih2o`` is scheduled to wake up every given interval, power the soil moisture
-sensors add take humidity measurement (or threshold if no analog input available).
+sensors and take humidity measurement (or threshold if no analog input available).
 Finally the sensors are powered off to extend their lifespan.
 
 Define the record interval

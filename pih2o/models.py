@@ -24,6 +24,6 @@ class Measurement(db.Model):
         for col in self.__table__.columns:
             value = getattr(self, col.name)
             if isinstance(value, (datetime, date)):
-                value = value.isoformat()
+                value = value.replace(microsecond=0).isoformat(' ')
             json[col.key] = value
         return json

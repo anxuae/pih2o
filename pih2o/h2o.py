@@ -13,10 +13,11 @@ import logging
 from datetime import datetime
 from croniter import croniter
 import flask
+from flask import got_request_exception
 from flask_restful import Api
 import pih2o
 from pih2o import models
-from pih2o.api import ApiConfig, ApiPump, ApiData
+from pih2o.api import ApiConfig, ApiPump, ApiMeasurements
 from pih2o.utils import LOGGER
 from pih2o.config import PiConfigParser
 
@@ -35,6 +36,7 @@ class PiApplication(object):
         LOGGER.debug("Initializing flask instance")
         self.flask_app = flask.Flask(pih2o.__name__)
         self.flask_app.config.from_object('pih2o.config')
+        got_request_exception.connect(self.log_exception, self.flask_app)
 
         @self.flask_app.route('/pih2o')
         def say_hello():
@@ -48,7 +50,7 @@ class PiApplication(object):
             models.db.create_all()
 
         LOGGER.debug("Initializing the RESTful API")
-        self.api = Api(self.flask_app)
+        self.api = Api(self.flask_app, catch_all_404s=True)
         root = '/pih2o/api/v1.0'
         self.api.add_resource(ApiConfig,
                               root + '/config',
@@ -58,11 +60,15 @@ class PiApplication(object):
         self.api.add_resource(ApiPump,
                               root + '/pump',
                               endpoint='pump', resource_class_args=(self,))
-        self.api.add_resource(ApiData,
-                              root + '/data',
-                              endpoint='data', resource_class_args=(models.db,))
+        self.api.add_resource(ApiMeasurements,
+                              root + '/measurements',
+                              endpoint='measurements', resource_class_args=(models.db,))
 
         atexit.register(self.shutdown)
+
+    def log_exception(self, sender, exception, **extra):
+        """Log an exception"""
+        sender.logger.error('Got exception during processing: %s', exception)
 
     def is_running(self):
         """Return True if the watering daemon is running.
