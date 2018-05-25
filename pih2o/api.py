@@ -38,7 +38,10 @@ class ApiConfig(Resource):
         self.fields = {}
         for section, options in config.DEFAULT.items():
             for key, value in options.items():
-                self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[type(value[0])]
+                if isinstance(value[0], (list, tuple)):
+                    self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[type(value[0])](PYTHON_TYPE_TO_FIELD[type(value[0][0])])
+                else:
+                    self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[type(value[0])]
 
     def get(self, section=None, key=None):
         if section and key:
@@ -70,8 +73,9 @@ class ApiPump(Resource):
         Resource.__init__(self)
         self.app = app
 
-    def get(self):
-        return {"message": "Not implemented"}, 501
+    def get(self, duration=None):
+        self.app.start_watering(duration)
+        return '', 204
 
 
 class ApiMeasurements(Resource):
@@ -113,4 +117,4 @@ class ApiMeasurements(Resource):
             else:
                 query = query.filter(getattr(Measurement, key).like(value))
 
-        return [measure.serialize() for measure in query.order_by(desc(Measurement.record_time)).limit(limit).all()], 200
+        return [measure.json() for measure in query.order_by(desc(Measurement.record_time)).limit(limit).all()], 200

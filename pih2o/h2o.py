@@ -51,7 +51,7 @@ class PiApplication(object):
 
         LOGGER.debug("Initializing the RESTful API")
         self.api = Api(self.flask_app, catch_all_404s=True)
-        root = '/pih2o/api/v1.0'
+        root = '/pih2o/api/v1'
         self.api.add_resource(ApiConfig,
                               root + '/config',
                               root + '/config/<string:section>',
@@ -59,6 +59,7 @@ class PiApplication(object):
                               endpoint='config', resource_class_args=(config,))
         self.api.add_resource(ApiPump,
                               root + '/pump',
+                              root + '/pump/<int:duration>',
                               endpoint='pump', resource_class_args=(self,))
         self.api.add_resource(ApiMeasurements,
                               root + '/measurements',
@@ -76,6 +77,16 @@ class PiApplication(object):
         if self._thread:
             return self._thread.is_alive()
         return False
+
+    def start_watering(self, duration=None):
+        """
+        Start the pump for plant watering.
+
+        :param duration: watering duration in seconds
+        :type duration: int
+        """
+        if not duration:
+            duration = self.config.getint("PUMP", "duration")
 
     def start_daemon(self):
         """Start the watering daemon main loop.
