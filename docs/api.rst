@@ -82,7 +82,7 @@ and the address is truncated (URL without scheme, domain and port).
 
     GET /pih2o/api/v1/pump'
 
-**Start wateing pump for a 10 seconds**::
+**Start wateing pump for 10 seconds**::
 
     GET /pih2o/api/v1/pump/10'
 
@@ -100,7 +100,7 @@ and the address is truncated (URL without scheme, domain and port).
             "humidity": 44.0,
             "id": 10600,
             "record_time": "2018-05-24 20:16:00",
-            "sensor": "0x3",
+            "sensor": 3,
             "triggered": false
         },
 
@@ -124,7 +124,7 @@ and the address is truncated (URL without scheme, domain and port).
             "humidity": 44.0,
             "id": 10600,
             "record_time": "2018-05-24 20:16:00",
-            "sensor": "0x3",
+            "sensor": 3,
             "triggered": false
         },
 
@@ -139,7 +139,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get measurements from a specific sensor**::
 
-    GET /pih2o/api/v1/measurements?sensor=0x3'
+    GET /pih2o/api/v1/measurements?sensor=3'
 
 .. code-block:: json
 
@@ -148,21 +148,21 @@ and the address is truncated (URL without scheme, domain and port).
             "humidity": 44.0,
             "id": 10600,
             "record_time": "2018-05-24 20:16:00",
-            "sensor": "0x3",
+            "sensor": 3,
             "triggered": true
         },
         {
             "humidity": 67.0,
             "id": 10530,
             "record_time": "2018-04-24 20:16:00",
-            "sensor": "0x3",
+            "sensor": 3,
             "triggered": false
         }
     ]
 
 **Get measurements using several query string filters**::
 
-    GET /pih2o/api/v1/measurements?sensor=0x3&humidity=44.0'
+    GET /pih2o/api/v1/measurements?sensor=3&humidity=44.0'
 
 .. code-block:: json
 
@@ -171,7 +171,7 @@ and the address is truncated (URL without scheme, domain and port).
             "humidity": 44.0,
             "id": 10600,
             "record_time": "2018-05-24 20:16:00",
-            "sensor": "0x3",
+            "sensor": 3,
             "triggered": true
         }
     ]

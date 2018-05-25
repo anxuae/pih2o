@@ -44,6 +44,11 @@ class ApiConfig(Resource):
                     self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[type(value[0])]
 
     def get(self, section=None, key=None):
+        if section and not self.cfg.has_section(section):
+            return {"message": "Invalid section '{}'".format(section)}, 400
+        if key and not self.cfg.has_option(section, key):
+            return {"message": "Invalid key '{}' in section '{}'".format(key, section)}, 400
+
         if section and key:
             return self.cfg.gettyped(section, key), 200
         elif section:
@@ -64,7 +69,7 @@ class ApiConfig(Resource):
                 if value is not None:
                     self.cfg.set(section, key, str(value))
 
-        return '', 204
+        return {}, 204
 
 
 class ApiPump(Resource):
@@ -74,8 +79,11 @@ class ApiPump(Resource):
         self.app = app
 
     def get(self, duration=None):
-        self.app.start_watering(duration)
-        return '', 204
+        try:
+            self.app.start_watering(duration)
+        except IOError as ex:
+            return {"message": str(ex)}, 503
+        return {}, 204
 
 
 class ApiMeasurements(Resource):

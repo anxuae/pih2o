@@ -20,6 +20,8 @@ from pih2o import models
 from pih2o.api import ApiConfig, ApiPump, ApiMeasurements
 from pih2o.utils import LOGGER
 from pih2o.config import PiConfigParser
+from pih2o.controls.pump import Pump
+from pih2o.controls.sensor import AnalogHumiditySensor, DigitalHumiditySensor
 
 
 class PiApplication(object):
@@ -65,11 +67,35 @@ class PiApplication(object):
                               root + '/measurements',
                               endpoint='measurements', resource_class_args=(models.db,))
 
+        # The HW connection of the controls
+        self.pump = None
+        self.analog_sensors = []
+        self.digital_sensors = []
+        self.init_controls()
+        self._timer = None
+
         atexit.register(self.shutdown_daemon)
 
     def log_exception(self, sender, exception, **extra):
         """Log an exception"""
         sender.logger.error('Got exception during processing: %s', exception)
+
+    def init_controls(self):
+        """
+        Initializing HW contols.
+        """
+        self.pump = Pump(self.config.getint("PUMP", "pin"))
+
+        if self.config.gettyped("SENSOR", "analog_pins"):
+            # Use analog sensors
+            for pin in self.config.gettyped("SENSOR", "analog_pins"):
+                self.analog_sensors.append(AnalogHumiditySensor(pin))
+        elif self.config.gettyped("SENSOR", "digital_pins"):
+            # Use digital sensors
+            for pin in self.config.gettyped("SENSOR", "digital_pins"):
+                self.digital_sensors.append(DigitalHumiditySensor(pin))
+        else:
+            raise ValueError("Neither analog nor digital sensor defined in the configuration")
 
     def is_running(self):
         """Return True if the watering daemon is running.
@@ -87,6 +113,9 @@ class PiApplication(object):
         """
         if not duration:
             duration = self.config.getint("PUMP", "duration")
+        self.pump.start()
+        self._timer = threading.Timer(duration, self.pump.stop)
+        self._timer.start()
 
     def start_daemon(self):
         """Start the watering daemon main loop.
@@ -108,6 +137,7 @@ class PiApplication(object):
 
         cron = croniter(cron_pattern)
         next_record = cron.get_next()
+
         while not self._stop.is_set():
             if self._stop.wait(next_record - time.time()):
                 break  # Stop requested
@@ -116,25 +146,56 @@ class PiApplication(object):
             next_record = cron.get_next()
 
             # Dummy measurements
-            import random
+            sensors = self.analog_sensors or self.digital_sensors
+            threshold = self.config.getfloat('GENERAL', 'humidity_threshold')
+            triggered_sensors = []
+
             with self.flask_app.app_context():
-                for i in range(4):
-                    humidity = random.randint(2, 99)
-                    measurement = models.Measurement(sensor=hex(i),
-                                                     humidity=humidity,
-                                                     triggered=humidity < 30,
-                                                     record_time=datetime.now())
-                    LOGGER.debug("Add new measurement for sensor '%s'", i)
-                    models.db.session.add(measurement)
+
+                for sensor in sensors:
+                    if sensor.stype == 'analog':
+                        humidity = sensor.get_value()
+                        triggered = humidity < threshold
+                    else:
+                        humidity = 0
+                        triggered = sensor.get_value()
+
+                    LOGGER.debug("Register measurement: sensor=%s, humidity=%s, triggered=%s",
+                                 sensor.pin, humidity, triggered)
+                    models.db.session.add(models.Measurement(sensor=sensor.pin,
+                                                             humidity=humidity,
+                                                             triggered=triggered,
+                                                             record_time=datetime.now()))
+
+                    if triggered:
+                        LOGGER.info("Sensor '%s' is triggered", sensor.pin)
+                        triggered_sensors.append(sensor)
+
                 models.db.session.commit()
+
+            # Start the watering if necessary (do nothing if already running)
+            if float(len(triggered_sensors)) >= float(len(sensors)) / 2:
+                if self.pump.is_running():
+                    LOGGER.warning("Skipping watering because pump is already running")
+                else:
+                    self.pump.start()
+                    self._stop.wait(self.config.getint("PUMP", "duration"))
+                    self.pump.stop()
 
     def shutdown_daemon(self):
         """Quit the watering daemon.
         """
+        if self._timer:
+            self._timer.cancel()
+
         if self.is_running():
             self._stop.set()
             self._thread.join()
             LOGGER.debug("Watering daemon stopped")
+
+        # To be sure and avoid floor flooding :)
+        if self.pump.is_running():
+            self.pump.stop()
 
 
 def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
@@ -181,4 +242,4 @@ def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
 
 if __name__ == '__main__':
     app = create_app()
-    app.run()
+    app.run(use_reloader=False)  # Dont want to start the daemon 2 times

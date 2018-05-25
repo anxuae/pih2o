@@ -38,6 +38,7 @@ DEFAULT = odict((
         odict((
             ("autostart", (True, "Start pih2o at Raspberry Pi startup")),
             ("record_interval", ("0 19 * * *", "Time between each humidity measurement")),
+            ("humidity_threshold", (20, "Percentage under which a sensor is considered as triggered")),
         ))
      ),
     ("PUMP",
@@ -46,11 +47,10 @@ DEFAULT = odict((
             ("duration", (60, "Watering duration in seconds when the pump is started")),
         ))
      ),
-    ("SENSORS",
+    ("SENSOR",
         odict((
             ("analog_pins", ((1, 2, 3, 4), "ADS1115 channels used to read the humidity level (4 max)")),
             ("digital_pins", ((11, 13, 15, 16), "Physical GPIO pins to detect threshold exceeded (4 max)")),
-            ("analog_threshold", (20, "Percentage under which a sensor is considered as triggered")),
         ))
      ),
 ))
