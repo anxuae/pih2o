@@ -15,9 +15,10 @@ from croniter import croniter
 import flask
 from flask import got_request_exception
 from flask_restful import Api
+from RPi import GPIO
 import pih2o
 from pih2o import models
-from pih2o.api import ApiConfig, ApiPump, ApiMeasurements
+from pih2o.api import ApiConfig, ApiPump, ApiSensors, ApiMeasurements
 from pih2o.utils import LOGGER
 from pih2o.config import PiConfigParser
 from pih2o.controls.pump import Pump
@@ -63,16 +64,22 @@ class PiApplication(object):
                               root + '/pump',
                               root + '/pump/<int:duration>',
                               endpoint='pump', resource_class_args=(self,))
+        self.api.add_resource(ApiSensors,
+                              root + '/sensors',
+                              root + '/sensors/<int:pin>',
+                              endpoint='sensors', resource_class_args=(self,))
         self.api.add_resource(ApiMeasurements,
                               root + '/measurements',
                               endpoint='measurements', resource_class_args=(models.db,))
 
         # The HW connection of the controls
+        GPIO.setmode(GPIO.BOARD)  # GPIO in physical pins mode
         self.pump = None
         self.analog_sensors = []
         self.digital_sensors = []
+        self._pump_timer = None
+
         self.init_controls()
-        self._timer = None
 
         atexit.register(self.shutdown_daemon)
 
@@ -81,8 +88,7 @@ class PiApplication(object):
         sender.logger.error('Got exception during processing: %s', exception)
 
     def init_controls(self):
-        """
-        Initializing HW contols.
+        """Initializing HW contols.
         """
         self.pump = Pump(self.config.getint("PUMP", "pin"))
 
@@ -105,17 +111,55 @@ class PiApplication(object):
         return False
 
     def start_watering(self, duration=None):
-        """
-        Start the pump for plant watering.
+        """Start the pump for plant watering.
 
         :param duration: watering duration in seconds
         :type duration: int
         """
+        if not self.pump:
+            raise EnvironmentError("The pump is not initialized")
         if not duration:
             duration = self.config.getint("PUMP", "duration")
         self.pump.start()
-        self._timer = threading.Timer(duration, self.pump.stop)
-        self._timer.start()
+        self._pump_timer = threading.Timer(duration, self.pump.stop)
+        self._pump_timer.daemon = True
+        self._pump_timer.start()
+
+    def sensors(self):
+        """Return the available sensors."""
+        return self.analog_sensors or self.digital_sensors
+
+    def read_sensors(self, sensor_pin=None):
+        """Read values from one or all sensors.
+
+        :param sensor_id: pin of the sensor
+        :type sensor_id: int
+        """
+        if not self.sensors():
+            raise EnvironmentError("The sensors are not initialized")
+
+        data = []
+        threshold = self.config.getfloat('GENERAL', 'humidity_threshold')
+
+        for sensor in self.sensors():
+            if sensor_pin is not None and sensor.pin != sensor_pin:
+                continue
+
+            if sensor.stype == 'analog':
+                humidity = sensor.get_value()
+                triggered = humidity < threshold
+            else:
+                humidity = 0
+                triggered = sensor.get_value()
+
+            LOGGER.debug("New measurement: sensor=%s, humidity=%s, triggered=%s",
+                         sensor.pin, humidity, triggered)
+
+            data.append(models.Measurement(**{'sensor': sensor.pin,
+                                              'humidity': humidity,
+                                              'triggered': triggered,
+                                              'record_time': datetime.now()}))
+        return data
 
     def start_daemon(self):
         """Start the watering daemon main loop.
@@ -142,39 +186,26 @@ class PiApplication(object):
             if self._stop.wait(next_record - time.time()):
                 break  # Stop requested
 
-            # Take a new measurement
+            # Calculate next wakeup time
             next_record = cron.get_next()
 
-            # Dummy measurements
-            sensors = self.analog_sensors or self.digital_sensors
-            threshold = self.config.getfloat('GENERAL', 'humidity_threshold')
+            # Take a new measurement
             triggered_sensors = []
-
+            untriggered_sensors = []
             with self.flask_app.app_context():
 
-                for sensor in sensors:
-                    if sensor.stype == 'analog':
-                        humidity = sensor.get_value()
-                        triggered = humidity < threshold
+                for measure in self.read_sensors():
+                    models.db.session.add(measure)
+                    if measure.triggered:
+                        LOGGER.info("Sensor '%s' is triggered", measure.sensor)
+                        triggered_sensors.append(measure)
                     else:
-                        humidity = 0
-                        triggered = sensor.get_value()
-
-                    LOGGER.debug("Register measurement: sensor=%s, humidity=%s, triggered=%s",
-                                 sensor.pin, humidity, triggered)
-                    models.db.session.add(models.Measurement(sensor=sensor.pin,
-                                                             humidity=humidity,
-                                                             triggered=triggered,
-                                                             record_time=datetime.now()))
-
-                    if triggered:
-                        LOGGER.info("Sensor '%s' is triggered", sensor.pin)
-                        triggered_sensors.append(sensor)
+                        untriggered_sensors.append(measure)
 
                 models.db.session.commit()
 
             # Start the watering if necessary (do nothing if already running)
-            if float(len(triggered_sensors)) >= float(len(sensors)) / 2:
+            if float(len(triggered_sensors)) >= float(len(untriggered_sensors)):
                 if self.pump.is_running():
                     LOGGER.warning("Skipping watering because pump is already running")
                 else:
@@ -185,8 +216,8 @@ class PiApplication(object):
     def shutdown_daemon(self):
         """Quit the watering daemon.
         """
-        if self._timer:
-            self._timer.cancel()
+        if self._pump_timer:
+            self._pump_timer.cancel()
 
         if self.is_running():
             self._stop.set()
@@ -194,8 +225,7 @@ class PiApplication(object):
             LOGGER.debug("Watering daemon stopped")
 
         # To be sure and avoid floor flooding :)
-        if self.pump.is_running():
-            self.pump.stop()
+        self.pump.stop()
 
 
 def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):

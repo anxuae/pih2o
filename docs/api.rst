@@ -78,13 +78,49 @@ and the address is truncated (URL without scheme, domain and port).
 ``pump``
 ^^^^^^^^
 
+
 **Start wateing pump for duration defined in the configuration**::
 
     GET /pih2o/api/v1/pump'
 
+
 **Start wateing pump for 10 seconds**::
 
     GET /pih2o/api/v1/pump/10'
+
+
+``sensors``
+^^^^^^^^^^^
+
+
+**Get the sensors list IDs (corresponds to the connection pin)**::
+
+    GET /pih2o/api/v1/sensors'
+
+.. code-block:: json
+
+    [
+        1,
+        2,
+        3,
+        4
+    ]
+
+
+**Get value of the sensor with ID 3**::
+
+    GET /pih2o/api/v1/sensors/3'
+
+.. code-block:: json
+
+    {
+        "humidity": 33,
+        "id": null,
+        "record_time": "2018-05-26 10:02:41",
+        "sensor": 3,
+        "triggered": false
+    }
+
 
 ``measurements``
 ^^^^^^^^^^^^^^^^

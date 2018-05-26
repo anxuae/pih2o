@@ -58,6 +58,19 @@ def test_start_pump_with_duration(client):
     assert resp.status_code == 204
 
 
+def test_get_sensors_list(client):
+    resp = client.get('/pih2o/api/v1/sensors')
+    assert resp.status_code == 200
+    assert json.loads(resp.data) == [1, 2, 3, 4]
+
+
+def test_read_one_sensor(client):
+    resp = client.get('/pih2o/api/v1/sensors/3')
+    assert resp.status_code == 200
+    data = json.loads(resp.data)
+    assert data['sensor'] == 3
+
+
 def test_get_10_measurements(client, db_data):
     resp = client.get('/pih2o/api/v1/measurements')
     assert resp.status_code == 200

@@ -108,10 +108,10 @@ from the humidity level measured is the soil slow absorption.
 Two modes are available to detect if watering is required by your plants depending on your
 configuration.
 
- - **analog channels available**: the pump is triggered if more than half sensors goes below the
-   defined humidity threshold (in %).
- - **else only digital channels**: the pump is triggered if more than half sensors is triggered
-   (in this case threshold is generally defined manually directly on the sensor).
+- **analog channels available**: the pump is triggered if more than half sensors goes below the
+  defined humidity threshold (in %).
+- **else only digital channels**: the pump is triggered if more than half sensors is triggered
+  (the threshold is generally defined manually directly on the sensor).
 
 Install developing version
 --------------------------

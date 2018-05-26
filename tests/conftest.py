@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import sys
+import os
 import random
 import datetime
 import pytest
+
+# Mock to avoid the use of real HW devices
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'mocks'))
+
 import pih2o
 from pih2o import models
 

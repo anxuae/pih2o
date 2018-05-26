@@ -86,6 +86,19 @@ class ApiPump(Resource):
         return {}, 204
 
 
+class ApiSensors(Resource):
+
+    def __init__(self, app):
+        Resource.__init__(self)
+        self.app = app
+
+    def get(self, pin=None):
+        if pin is None:
+            return [sensor.pin for sensor in self.app.sensors()], 200
+        else:
+            return self.app.read_sensors(pin)[0].json(), 200
+
+
 class ApiMeasurements(Resource):
 
     def __init__(self, db):

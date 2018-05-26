@@ -4,14 +4,17 @@
 """
 
 import threading
+from RPi import GPIO
 from pih2o.utils import LOGGER
 
 
 class Pump(object):
 
     def __init__(self, pin):
-        self.pin = pin
         self._running = threading.Event()
+
+        self.pin = pin
+        GPIO.setup(pin, GPIO.OUT)
 
     def is_running(self):
         """
@@ -28,6 +31,7 @@ class Pump(object):
             raise IOError("Watering is already started")
 
         LOGGER.info("Starting pump (physical pin %s)", self.pin)
+        GPIO.output(self.pin, GPIO.HIGH)
         self._running.set()
 
     def stop(self):
@@ -35,4 +39,5 @@ class Pump(object):
         Stop the pump.
         """
         LOGGER.info("Stoping pump (physical pin %s)", self.pin)
+        GPIO.output(self.pin, GPIO.LOW)
         self._running.clear()
