@@ -61,7 +61,7 @@ def test_start_pump_with_duration(client):
 def test_get_sensors_list(client):
     resp = client.get('/pih2o/api/v1/sensors')
     assert resp.status_code == 200
-    assert json.loads(resp.data) == [1, 2, 3, 4]
+    assert json.loads(resp.data) == [1, 2, 3]
 
 
 def test_read_one_sensor(client):

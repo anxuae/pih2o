@@ -4,6 +4,7 @@
 """Pih2o main module.
 """
 
+import os
 import sys
 import time
 import atexit
@@ -20,7 +21,7 @@ import pih2o
 from pih2o import models
 from pih2o.api import ApiConfig, ApiPump, ApiSensors, ApiMeasurements
 from pih2o.utils import LOGGER
-from pih2o.config import PiConfigParser
+from pih2o.config import PiConfigParser, SQLALCHEMY_DATABASE_URI
 from pih2o.controls.pump import Pump
 from pih2o.controls.sensor import AnalogHumiditySensor, DigitalHumiditySensor
 
@@ -75,8 +76,7 @@ class PiApplication(object):
         # The HW connection of the controls
         GPIO.setmode(GPIO.BOARD)  # GPIO in physical pins mode
         self.pump = None
-        self.analog_sensors = []
-        self.digital_sensors = []
+        self.sensors = []
         self._pump_timer = None
 
         self.init_controls()
@@ -92,16 +92,21 @@ class PiApplication(object):
         """
         self.pump = Pump(self.config.getint("PUMP", "pin"))
 
-        if self.config.gettyped("SENSOR", "analog_pins"):
+        read_pins = self.config.gettyped("SENSOR", "analog_pins")
+        if read_pins:
             # Use analog sensors
-            for pin in self.config.gettyped("SENSOR", "analog_pins"):
-                self.analog_sensors.append(AnalogHumiditySensor(pin))
-        elif self.config.gettyped("SENSOR", "digital_pins"):
-            # Use digital sensors
-            for pin in self.config.gettyped("SENSOR", "digital_pins"):
-                self.digital_sensors.append(DigitalHumiditySensor(pin))
+            sensor_class = AnalogHumiditySensor
         else:
+            # Use digital sensors
+            read_pins = self.config.gettyped("SENSOR", "digital_pins")
+            sensor_class = DigitalHumiditySensor
+
+        if not read_pins:
             raise ValueError("Neither analog nor digital sensor defined in the configuration")
+
+        for pin in read_pins:
+            self.sensors.append(sensor_class(pin, self.config.gettyped("SENSOR", "power_pin"),
+                                             self.config.gettyped('SENSOR', 'analog_range')))
 
     def is_running(self):
         """Return True if the watering daemon is running.
@@ -125,40 +130,41 @@ class PiApplication(object):
         self._pump_timer.daemon = True
         self._pump_timer.start()
 
-    def sensors(self):
-        """Return the available sensors."""
-        return self.analog_sensors or self.digital_sensors
-
     def read_sensors(self, sensor_pin=None):
         """Read values from one or all sensors.
 
         :param sensor_id: pin of the sensor
         :type sensor_id: int
         """
-        if not self.sensors():
+        if not self.sensors:
             raise EnvironmentError("The sensors are not initialized")
 
         data = []
-        threshold = self.config.getfloat('GENERAL', 'humidity_threshold')
-
-        for sensor in self.sensors():
+        for sensor in self.sensors:
             if sensor_pin is not None and sensor.pin != sensor_pin:
                 continue
 
             if sensor.stype == 'analog':
                 humidity = sensor.get_value()
-                triggered = humidity < threshold
+                triggered = humidity <= self.config.getfloat("GENERAL", "humidity_threshold")
             else:
                 humidity = 0
                 triggered = sensor.get_value()
 
-            LOGGER.debug("New measurement: sensor=%s, humidity=%s, triggered=%s",
-                         sensor.pin, humidity, triggered)
+            measure = models.Measurement(**{'sensor': sensor.pin,
+                                            'humidity': humidity,
+                                            'triggered': triggered,
+                                            'record_time': datetime.now()})
 
-            data.append(models.Measurement(**{'sensor': sensor.pin,
-                                              'humidity': humidity,
-                                              'triggered': triggered,
-                                              'record_time': datetime.now()}))
+            LOGGER.debug("New measurement: sensor=%s, humidity=%s, triggered=%s",
+                         sensor.pin, measure.humidity, measure.triggered)
+
+            data.append(measure)
+
+        if not self.config.getboolean("SENSOR", "always_powered"):
+            for sensor in self.sensors:
+                sensor.power_off()
+
         return data
 
     def start_daemon(self):
@@ -226,6 +232,8 @@ class PiApplication(object):
 
         # To be sure and avoid floor flooding :)
         self.pump.stop()
+
+        GPIO.cleanup()
 
 
 def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):

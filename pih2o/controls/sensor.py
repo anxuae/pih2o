@@ -3,7 +3,7 @@
 """Sensors management.
 """
 
-import random
+import time
 import threading
 from RPi import GPIO
 import Adafruit_ADS1x15
@@ -19,26 +19,36 @@ class HumiditySensor(object):
 
     stype = None
 
-    def __init__(self, pin, power_pin, power_auto=True):
+    def __init__(self, pin, power_pin=0, analog_range=None):
         self.pin = pin
-        self.power_pin = power_pin
-        self.power_auto = power_auto
+        self.power_pin = power_pin  # 0 means do not manage the power
+        self.analog_range = analog_range or []
         self._lock = threading.Lock()
 
-        GPIO.setup(self.power_pin, GPIO.OUT)
-        if not power_auto:
+        GPIO.setup(self.pin, GPIO.IN)
+        if self.power_pin:
+            GPIO.setup(self.power_pin, GPIO.OUT)
+
+    def power_on(self):
+        """Power on the sensor.
+        """
+        if self.power_pin and GPIO.input(self.power_pin) == GPIO.LOW:
             GPIO.output(self.power_pin, GPIO.HIGH)
+            time.sleep(5)  # Make sure the sensor is powered and ready
 
     def get_value(self):
         """Return the sensor value.
+        The sensor is automatically powered on if necessary.
         """
         with self._lock:
-            if self.power_auto:
-                GPIO.output(self.power_pin, GPIO.HIGH)
-            value = self._read()
-            if self.power_auto:
-                GPIO.output(self.power_pin, GPIO.LOW)
-        return value
+            self.power_on()
+            return self._read()
+
+    def power_off(self):
+        """Power off the sensor.
+        """
+        if self.power_pin and GPIO.input(self.power_pin) == GPIO.HIGH:
+            GPIO.output(self.power_pin, GPIO.LOW)
 
     def _read(self):
         raise NotImplementedError
@@ -51,7 +61,7 @@ class DigitalHumiditySensor(HumiditySensor):
     def _read(self):
         """Return True if the sensor has detected a low humidity level.
         """
-        return random.choice([True, False])
+        return GPIO.input(self.pin) == GPIO.HIGH
 
 
 class AnalogHumiditySensor(HumiditySensor):
@@ -59,6 +69,8 @@ class AnalogHumiditySensor(HumiditySensor):
     stype = 'analog'
 
     def _read(self):
-        """Return the humidity level measured by the sensor.
+        """Return the humidity level (in %) measured by the sensor.
         """
-        return random.randint(2, 99)
+        # Choose gain 1 because the sensor range is +/-4.096V
+        value = adc.read_adc(self.pin, gain=1)
+        return (value - min(self.analog_range)) * 100. / (max(self.analog_range) - min(self.analog_range))

@@ -22,8 +22,17 @@ Default configuration
     duration = 60
 
     [SENSOR]
-    # ADS1115 channels used to read the humidity level (4 max)
-    analog_pins = (1, 2, 3, 4)
+    # Physical GPIO DO-OUT pin use to power on/off the sensors
+    power_pin = 12
 
-    # Physical GPIO pins to detect threshold exceeded (4 max)
-    digital_pins = (11, 13, 15, 16)
+    # True if need to power on the sensors continuously (accelerate corrosion of resistive sensors)
+    always_powered = False
+
+    # Physical GPIO DO-IN pins to detect threshold exceeded
+    digital_pins = (11, 15, 31)
+
+    # ADS1115 channels used to read the humidity level
+    analog_pins = (1, 2, 3)
+
+    # Sensor physical range measured with the ADS1115 (from dry to wet)
+    analog_range = (0, 970)

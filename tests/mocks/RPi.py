@@ -4,6 +4,8 @@
 Mocks for tests on other HW than Raspberry Pi.
 """
 
+import random
+
 
 class GPIO(object):
 
@@ -22,6 +24,12 @@ class GPIO(object):
     @classmethod
     def setup(cls, pin, direction, **kwargs):
         print("Mock: setup GPIO pin {} to {}".format(pin, direction))
+
+    @classmethod
+    def input(cls, pin):
+        status = random.choice([True, False])
+        print("Mock: input GPIO pin {} = {}".format(pin, status))
+        return status
 
     @classmethod
     def output(cls, pin, status):

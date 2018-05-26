@@ -49,9 +49,11 @@ DEFAULT = odict((
      ),
     ("SENSOR",
         odict((
-            ("power_pins", ((12, 16, 32), "Physical GPIO DO-OUT pins use to power on/off the sensors")),
-            ("analog_pins", ((1, 2, 3), "ADS1115 channels used to read the humidity level")),
+            ("power_pin", (12, "Physical GPIO DO-OUT pin use to power on/off the sensors")),
+            ("always_powered", (False, "True if need to power on the sensors continuously (accelerate corrosion of resistive sensors)")),
             ("digital_pins", ((11, 15, 31), "Physical GPIO DO-IN pins to detect threshold exceeded")),
+            ("analog_pins", ((1, 2, 3), "ADS1115 channels used to read the humidity level")),
+            ("analog_range", ((0, 970), "Sensor physical range measured with the ADS1115 (from dry to wet)")),
         ))
      ),
 ))
@@ -79,10 +81,11 @@ class PiConfigParser(ConfigParser):
     def __init__(self, filename, clear=False):
         ConfigParser.__init__(self)
         self.filename = osp.abspath(osp.expanduser(filename))
+        self.db_filename = osp.join(osp.dirname(self.filename), 'pih2o.db')
 
         # Update Flask configuration
         global SQLALCHEMY_DATABASE_URI
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + osp.join(osp.dirname(self.filename), 'pih2o.db')
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + self.db_filename
 
         if not osp.isfile(self.filename) or clear:
             LOGGER.info("Generate the configuration file in '%s'", self.filename)
@@ -90,8 +93,10 @@ class PiConfigParser(ConfigParser):
             if not osp.isdir(dirname):
                 os.makedirs(dirname)
             generate_default_config(self.filename)
-            if osp.isfile(SQLALCHEMY_DATABASE_URI):
-                os.remove(SQLALCHEMY_DATABASE_URI)
+
+            if osp.isfile(self.db_filename):
+                LOGGER.info("Dropping all measurements from database '%s'", self.db_filename)
+                os.remove(self.db_filename)
 
         self.reload()
 
