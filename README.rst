@@ -25,7 +25,8 @@ Hardware
 * 1 Peristaltic dosing pump (or electro valve)
 * 1 to 4 soil moisture sensors (Arduino TE215)
 * 1 Analog-to-Digital Converter (ADS1115 16 Bit 4 Channel I2C)
-* 1 transistor NPN (type BC237B: Ic= 100mA)
+* 1 transistor NPN (type BC237B but other may work fine)
+* 1 resistor of 1500 Ohm
 * 1 Relay module (5V DC)
 
 Software
@@ -80,16 +81,16 @@ Start the automatic plant watering application using the command::
 
     $ pih2o
 
-.. warning:: Running pih2o in that way use the development server of
-    `flask <http://flask.pocoo.org>`_ which is `not suitable in a production
-    environment <http://flask.pocoo.org/docs/deploying>`_
-
 The application acts as a daemon running on the Raspberry Pi. It can be controlled thanks
 to an `RESTful API <https://github.com/anxuae/pih2o/blob/master/docs/api.rst>`_.
 
 The ``pih2o`` is scheduled to wake up every given interval, power the soil moisture
 sensors and take humidity measurement (or threshold if no analog input available).
 Finally the sensors are powered off to extend their lifespan.
+
+.. warning:: Running pih2o in that way use the development server of
+    `flask <http://flask.pocoo.org>`_ which is `not suitable in a production
+    environment <http://flask.pocoo.org/docs/deploying>`_
 
 Define the record interval
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -163,6 +164,32 @@ for further details.
 Circuit diagram
 ---------------
 
-.. image:: https://raw.githubusercontent.com/anxuae/pih2o/master/templates/sketch.png
+Here is the soil moisture sensor specification used for this project:
+
+==================== ==================================
+Parameter            Value
+==================== ==================================
+Input Voltage        3.3 – 5V
+Output Voltage       0 – 4.2V
+Input Current        35mA
+Output Signal        Both Analog (A0) and Digital (D0)
+==================== ==================================
+
+Digital sensors
+^^^^^^^^^^^^^^^
+
+Here is the diagram for digital sensors (rise to high on dry soil). Depending on the sensor type,
+an signal amplifier may be necessary (not represented on this diagram).
+
+.. image:: https://raw.githubusercontent.com/anxuae/pih2o/master/templates/sketch_digital.png
    :align: center
-   :alt: Electronic sketch
+   :alt: Electronic sketch for digital sensors
+
+Analog sensors
+^^^^^^^^^^^^^^
+
+Here is the diagram for analog sensors connected to an ADC1115 to measure humidity level.
+
+.. image:: https://raw.githubusercontent.com/anxuae/pih2o/master/templates/sketch_analog.png
+  :align: center
+  :alt: Electronic sketch for analog sensors
