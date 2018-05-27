@@ -5,7 +5,8 @@ This document describe the API exposed by ``pih2o``. The syntax used is close
 to the ``curl`` one, but for readability reasons, not all options are written
 and the address is truncated (URL without scheme, domain and port).
 
-.. contents:: API Contents
+.. contents:: API Contents:
+
 
 ``pih2o``
 ^^^^^^^^^
