@@ -5,7 +5,8 @@
 
 
 The ``pih2o`` project attempts to provide an automatic plant watering application *out-of-the-box*
-in pure Python for Raspberry Pi.
+in pure Python for Raspberry Pi. The watering is triggered for all plants depending on the number
+of plants which need water.
 
 Requirements
 ------------
@@ -115,7 +116,7 @@ The watering time is defined in the `Configuration`_. The rational to dissociate
 from the humidity level measured is the soil slow absorption.
 
 Two modes are available to detect if watering is required by your plants depending on your
-configuration.
+configuration and the number of sensors connected.
 
 - **analog channels available**: the pump is triggered if more than half sensors goes below the
   defined humidity threshold (in %).
@@ -164,7 +165,8 @@ for further details.
 Circuit diagram
 ---------------
 
-Here is the soil moisture sensor specification used for this project:
+Soil moisture sensor specification used for this project (the number is up to you but the following
+diagram is for up to 4 max):
 
 ==================== ==================================
 Parameter            Value
