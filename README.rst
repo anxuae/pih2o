@@ -11,9 +11,12 @@ Requirements
 ------------
 
 The requirements listed below are the one used for the development of ``pih2o``, but other
-configuration may work fine. The **pump** can be replaced by an electro valve if the tank
-water is upper than the plants (watering by gravity). The number of **soil moisture sensors**
-can be easily adapted from 1 to 4.
+configuration may work fine.
+
+The **pump** can be replaced by an electro valve if the tank water is upper than the plants
+(watering by gravity). The number of **soil moisture sensors** can be easily adapted from 1 to 4.
+The **transistor** is optional, the sensors can be directly connected to the 5V pins in order
+to power them continuously (but it accelerate their corrosion).
 
 Hardware
 ^^^^^^^^
@@ -22,6 +25,7 @@ Hardware
 * 1 Peristaltic dosing pump (or electro valve)
 * 1 to 4 soil moisture sensors (Arduino TE215)
 * 1 Analog-to-Digital Converter (ADS1115 16 Bit 4 Channel I2C)
+* 1 transistor NPN (type BC237B: Ic= 100mA)
 * 1 Relay module (5V DC)
 
 Software
@@ -75,6 +79,10 @@ Run
 Start the automatic plant watering application using the command::
 
     $ pih2o
+
+.. warning:: Running pih2o in that way use the development server of
+    `flask <http://flask.pocoo.org>`_ which is `not suitable in a production
+    environment <http://flask.pocoo.org/docs/deploying>`_
 
 The application acts as a daemon running on the Raspberry Pi. It can be controlled thanks
 to an `RESTful API <https://github.com/anxuae/pih2o/blob/master/docs/api.rst>`_.

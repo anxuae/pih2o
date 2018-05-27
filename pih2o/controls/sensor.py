@@ -18,6 +18,7 @@ class HumiditySensor(object):
     """
 
     stype = None
+    power_state = {}  # Keep power pins of all sensors to mutualize on/off
 
     def __init__(self, pin, power_pin=0, analog_range=None):
         self.pin = pin
@@ -25,16 +26,17 @@ class HumiditySensor(object):
         self.analog_range = analog_range or []
         self._lock = threading.Lock()
 
-        GPIO.setup(self.pin, GPIO.IN)
-        if self.power_pin:
-            GPIO.setup(self.power_pin, GPIO.OUT)
+        if self.power_pin and self.power_state.get(self.power_pin) is None:
+            GPIO.setup(self.power_pin, GPIO.OUT)  # Never been setup
+            self.power_state[self.power_pin] = False
 
     def power_on(self):
         """Power on the sensor.
         """
-        if self.power_pin and GPIO.input(self.power_pin) == GPIO.LOW:
+        if self.power_pin and not self.power_state[self.power_pin]:
             GPIO.output(self.power_pin, GPIO.HIGH)
-            time.sleep(5)  # Make sure the sensor is powered and ready
+            time.sleep(3)  # Make sure the sensor is powered and ready
+            self.power_state[self.power_pin] = True
 
     def get_value(self):
         """Return the sensor value.
@@ -47,8 +49,9 @@ class HumiditySensor(object):
     def power_off(self):
         """Power off the sensor.
         """
-        if self.power_pin and GPIO.input(self.power_pin) == GPIO.HIGH:
+        if self.power_pin and self.power_state[self.power_pin]:
             GPIO.output(self.power_pin, GPIO.LOW)
+            self.power_state[self.power_pin] = False
 
     def _read(self):
         raise NotImplementedError
@@ -57,6 +60,10 @@ class HumiditySensor(object):
 class DigitalHumiditySensor(HumiditySensor):
 
     stype = 'digital'
+
+    def __init__(self, *args, **kwargs):
+        HumiditySensor.__init__(self, *args, **kwargs)
+        GPIO.setup(self.pin, GPIO.IN)
 
     def _read(self):
         """Return True if the sensor has detected a low humidity level.

@@ -5,8 +5,8 @@ Default configuration
 .. code-block:: ini
 
     [GENERAL]
-    # Start pih2o at Raspberry Pi startup
-    autostart = True
+    # Start pih2o at Raspberry Pi startup (useful if pih2o not running with a WSGI)
+    autostart = False
 
     # Time between each humidity measurement
     record_interval = 0 19 * * *
@@ -25,11 +25,8 @@ Default configuration
     # Physical GPIO DO-OUT pin use to power on/off the sensors
     power_pin = 12
 
-    # True if need to power on the sensors continuously (accelerate corrosion of resistive sensors)
-    always_powered = False
-
     # Physical GPIO DO-IN pins to detect threshold exceeded
-    digital_pins = (11, 15, 31)
+    digital_pins = (11, 13, 15)
 
     # ADS1115 channels used to read the humidity level
     analog_pins = (1, 2, 3)

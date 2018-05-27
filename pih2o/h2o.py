@@ -161,9 +161,8 @@ class PiApplication(object):
 
             data.append(measure)
 
-        if not self.config.getboolean("SENSOR", "always_powered"):
-            for sensor in self.sensors:
-                sensor.power_off()
+        for sensor in self.sensors:
+            sensor.power_off()
 
         return data
 
@@ -203,7 +202,7 @@ class PiApplication(object):
                 for measure in self.read_sensors():
                     models.db.session.add(measure)
                     if measure.triggered:
-                        LOGGER.info("Sensor '%s' is triggered", measure.sensor)
+                        LOGGER.info("Sensor on physical pin '%s' is triggered", measure.sensor)
                         triggered_sensors.append(measure)
                     else:
                         untriggered_sensors.append(measure)

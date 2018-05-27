@@ -36,7 +36,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 DEFAULT = odict((
     ("GENERAL",
         odict((
-            ("autostart", (True, "Start pih2o at Raspberry Pi startup")),
+            ("autostart", (False, "Start pih2o at Raspberry Pi startup (useful if pih2o not running with a WSGI)")),
             ("record_interval", ("0 19 * * *", "Time between each humidity measurement")),
             ("humidity_threshold", (20, "Percentage under which a sensor is considered as triggered")),
         ))
@@ -50,8 +50,7 @@ DEFAULT = odict((
     ("SENSOR",
         odict((
             ("power_pin", (12, "Physical GPIO DO-OUT pin use to power on/off the sensors")),
-            ("always_powered", (False, "True if need to power on the sensors continuously (accelerate corrosion of resistive sensors)")),
-            ("digital_pins", ((11, 15, 31), "Physical GPIO DO-IN pins to detect threshold exceeded")),
+            ("digital_pins", ((11, 13, 15), "Physical GPIO DO-IN pins to detect threshold exceeded")),
             ("analog_pins", ((1, 2, 3), "ADS1115 channels used to read the humidity level")),
             ("analog_range", ((0, 970), "Sensor physical range measured with the ADS1115 (from dry to wet)")),
         ))
