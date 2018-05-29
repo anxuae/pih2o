@@ -39,6 +39,7 @@ DEFAULT = odict((
             ("autostart", (False, "Start pih2o at Raspberry Pi startup (useful if pih2o not running with a WSGI)")),
             ("record_interval", ("0 19 * * *", "Time between each humidity measurement")),
             ("humidity_threshold", (20, "Percentage under which a sensor is considered as triggered")),
+            ("watering_strategy", ('majority', "Rules applied to trigger the pump ('first', 'majority' or 'last')")),
         ))
      ),
     ("PUMP",

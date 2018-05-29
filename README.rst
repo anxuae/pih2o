@@ -16,16 +16,16 @@ configuration may work fine.
 
 The **pump** can be replaced by an electro valve if the tank water is upper than the plants
 (watering by gravity). The number of **soil moisture sensors** can be easily adapted from 1 to 4.
-The **transistor** is optional, the sensors can be directly connected to the 5V pins in order
+The **transistor** is optional, the sensors can be directly connected to the 5V pin in order
 to power them continuously (but it accelerate their corrosion).
 
 Hardware
 ^^^^^^^^
 
 * 1 Raspberry Pi 2 Model B (or higher)
-* 1 Peristaltic dosing pump (or electro valve)
+* 1 pump and its power supply (or electro valve)
 * 1 to 4 soil moisture sensors (Arduino TE215)
-* 1 Analog-to-Digital Converter (ADS1115 16 Bit 4 Channel I2C)
+* 1 Analog-to-Digital Converter (ADS1015 or ADS1115 4 Channel I2C)
 * 1 transistor NPN (type BC237B but other may work fine)
 * 1 resistor of 1500 Ohm
 * 1 Relay module (5V DC)
@@ -113,15 +113,21 @@ Pump triggering strategy
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 The watering time is defined in the `Configuration`_. The rational to dissociate the pump stop
-from the humidity level measured is the soil slow absorption.
+from the humidity level measured is the soil slow absorption and we want to avoid floor flooding.
 
-Two modes are available to detect if watering is required by your plants depending on your
+Three strategies are defined to detect if watering is required by your plants depending on your
 configuration and the number of sensors connected.
 
-- **analog channels available**: the pump is triggered if more than half sensors goes below the
-  defined humidity threshold (in %).
-- **else only digital channels**: the pump is triggered if more than half sensors is triggered
-  (the threshold is generally defined manually directly on the sensor).
+* ``[GENERAL][watering_strategy] = majority`` means the pump is triggered if half of sensors
+  are triggered.
+* ``[GENERAL][watering_strategy] = first`` means the pump is triggered if at least one sensor
+  is triggered.
+* ``[GENERAL][watering_strategy] = last`` means the pump is triggered if all sensors are
+  triggered.
+
+.. note:: if analog channels are available: the sensor is triggered when the humidity read from the AO
+          goes below the defined threshold (in %) else if digital channels are available: the sensor
+          is triggered if the corresponding DO is set to 1.
 
 Install developing version
 --------------------------

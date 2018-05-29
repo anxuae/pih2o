@@ -210,7 +210,10 @@ class PiApplication(object):
                 models.db.session.commit()
 
             # Start the watering if necessary (do nothing if already running)
-            if float(len(triggered_sensors)) >= float(len(untriggered_sensors)):
+            strategy = self.config.get('GENERAL', 'watering_strategy')
+            if (strategy == 'majority' and float(len(triggered_sensors)) >= float(len(untriggered_sensors))) or \
+                    (strategy == 'first' and triggered_sensors) or \
+                    (strategy == 'last' and not untriggered_sensors):
                 if self.pump.is_running():
                     LOGGER.warning("Skipping watering because pump is already running")
                 else:

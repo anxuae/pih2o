@@ -14,6 +14,9 @@ Default configuration
     # Percentage under which a sensor is considered as triggered
     humidity_threshold = 20
 
+    # Rules applied to trigger the pump ('first', 'majority' or 'last')
+    watering_strategy = majority
+
     [PUMP]
     # Physical GPIO pin where the pump is connected (or electro-valve)
     pin = 7
