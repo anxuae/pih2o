@@ -7,6 +7,8 @@ import time
 import threading
 from RPi import GPIO
 import Adafruit_ADS1x15
+from pih2o.utils import LOGGER
+
 
 adc = Adafruit_ADS1x15.ADS1115()
 
@@ -80,4 +82,6 @@ class AnalogHumiditySensor(HumiditySensor):
         """
         # Choose gain 1 because the sensor range is +/-4.096V
         value = adc.read_adc(self.pin, gain=1)
-        return (value - min(self.analog_range)) * 100. / (max(self.analog_range) - min(self.analog_range))
+        if value < min(self.analog_range) or value > max(self.analog_range):
+            LOGGER.warning("Sensor %s value '%s' is outside the defined range %s", self.pin, value, self.analog_range)
+        return 100 - (value - min(self.analog_range)) * 100. / (max(self.analog_range) - min(self.analog_range))

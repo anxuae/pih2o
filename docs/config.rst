@@ -32,7 +32,7 @@ Default configuration
     digital_pins = (11, 13, 15)
 
     # ADS1115 channels used to read the humidity level
-    analog_pins = (1, 2, 3)
+    analog_pins = (0, 1, 2)
 
-    # Sensor physical range measured with the ADS1115 (from dry to wet)
-    analog_range = (0, 970)
+    # Sensor physical range measured with the ADS1115 (from wet to dry)
+    analog_range = (15900, 32800)

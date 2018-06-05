@@ -52,8 +52,8 @@ DEFAULT = odict((
         odict((
             ("power_pin", (12, "Physical GPIO DO-OUT pin use to power on/off the sensors")),
             ("digital_pins", ((11, 13, 15), "Physical GPIO DO-IN pins to detect threshold exceeded")),
-            ("analog_pins", ((1, 2, 3), "ADS1115 channels used to read the humidity level")),
-            ("analog_range", ((0, 970), "Sensor physical range measured with the ADS1115 (from dry to wet)")),
+            ("analog_pins", ((0, 1, 2), "ADS1115 channels used to read the humidity level")),
+            ("analog_range", ((15900, 32800), "Sensor physical range measured with the ADS1115 (from wet to dry)")),
         ))
      ),
 ))

@@ -4,7 +4,6 @@
 """Pih2o main module.
 """
 
-import os
 import sys
 import time
 import atexit
@@ -21,7 +20,7 @@ import pih2o
 from pih2o import models
 from pih2o.api import ApiConfig, ApiPump, ApiSensors, ApiMeasurements
 from pih2o.utils import LOGGER
-from pih2o.config import PiConfigParser, SQLALCHEMY_DATABASE_URI
+from pih2o.config import PiConfigParser
 from pih2o.controls.pump import Pump
 from pih2o.controls.sensor import AnalogHumiditySensor, DigitalHumiditySensor
 
@@ -100,6 +99,9 @@ class PiApplication(object):
             # Use digital sensors
             read_pins = self.config.gettyped("SENSOR", "digital_pins")
             sensor_class = DigitalHumiditySensor
+
+        if isinstance(read_pins, int):  # May have only one sensor
+            read_pins = (read_pins,)
 
         if not read_pins:
             raise ValueError("Neither analog nor digital sensor defined in the configuration")
@@ -263,7 +265,8 @@ def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
 
     options, _args = parser.parse_known_args()
 
-    logging.basicConfig(filename=options.log, filemode='w', format='[ %(levelname)-8s] %(name)-18s: %(message)s', level=options.logging)
+    logging.basicConfig(filename=options.log, filemode='w',
+                        format='[ %(levelname)-8s] %(name)-18s: %(message)s', level=options.logging)
 
     config = PiConfigParser(cfgfile, options.reset)
 

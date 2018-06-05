@@ -10,6 +10,7 @@ from flask_restful import Resource, fields, marshal
 from pih2o import config
 from pih2o.models import Measurement
 
+
 try:
     unicode
 except NameError:
@@ -39,7 +40,8 @@ class ApiConfig(Resource):
         for section, options in config.DEFAULT.items():
             for key, value in options.items():
                 if isinstance(value[0], (list, tuple)):
-                    self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[type(value[0])](PYTHON_TYPE_TO_FIELD[type(value[0][0])])
+                    self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[
+                        type(value[0])](PYTHON_TYPE_TO_FIELD[type(value[0][0])])
                 else:
                     self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[type(value[0])]
 
