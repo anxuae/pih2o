@@ -23,12 +23,12 @@ Hardware
 ^^^^^^^^
 
 * 1 Raspberry Pi 2 Model B (or higher)
-* 1 pump and its power supply (or electro valve)
+* 1 pump and its power supply (or electro valve) 12V DC
 * 1 to 4 soil moisture sensors (Arduino TE215)
 * 1 Analog-to-Digital Converter (ADS1015 or ADS1115 4 Channel I2C)
 * 1 transistor NPN (type BC237B but other may work fine)
 * 1 resistor of 1500 Ohm
-* 1 Relay module (5V DC)
+* 1 Relay module (12V DC)
 
 Software
 ^^^^^^^^
@@ -201,3 +201,13 @@ Here is the diagram for analog sensors connected to an ADC1115 to measure humidi
 .. image:: https://raw.githubusercontent.com/anxuae/pih2o/master/templates/sketch_analog.png
   :align: center
   :alt: Electronic sketch for analog sensors
+
+Pump
+^^^^
+
+Here is the diagram for the pump (or electro valve). For better understanding the sensors
+are not represented here.
+
+.. image:: https://raw.githubusercontent.com/anxuae/pih2o/master/templates/sketch_pump.png
+  :align: center
+  :alt: Electronic sketch for pump
