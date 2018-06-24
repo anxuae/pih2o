@@ -39,7 +39,7 @@ and the address is truncated (URL without scheme, domain and port).
        },
        "PUMP":{
           "pin":3,
-          "flow":500
+          "duration":6
        }
     }
 
