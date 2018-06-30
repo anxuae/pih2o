@@ -46,7 +46,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get all options from a section**::
 
-    GET /pih2o/api/v1/config/<section>'
+    GET /pih2o/api/v1/config/<section>
 
 .. code-block:: json
 
@@ -57,7 +57,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get value of an option**::
 
-    GET /pih2o/api/v1/config/<section>/<option>'
+    GET /pih2o/api/v1/config/<section>/<option>
 
 .. code-block:: json
 
@@ -85,12 +85,12 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Start wateing pump for duration defined in the configuration**::
 
-    GET /pih2o/api/v1/pump'
+    GET /pih2o/api/v1/pump
 
 
 **Start wateing pump for 10 seconds**::
 
-    GET /pih2o/api/v1/pump/10'
+    GET /pih2o/api/v1/pump/10
 
 
 ``sensors``
@@ -99,7 +99,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get the sensors list IDs (corresponds to the connection pin)**::
 
-    GET /pih2o/api/v1/sensors'
+    GET /pih2o/api/v1/sensors
 
 .. code-block:: json
 
@@ -113,7 +113,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get value of the sensor with ID 3**::
 
-    GET /pih2o/api/v1/sensors/3'
+    GET /pih2o/api/v1/sensors/3
 
 .. code-block:: json
 
@@ -131,7 +131,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get the 10 last measurements (by default only 10 measurements are returned for any request)**::
 
-    GET /pih2o/api/v1/measurements'
+    GET /pih2o/api/v1/measurements
 
 .. code-block:: json
 
@@ -155,7 +155,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get the 100 last measurements**::
 
-    GET /pih2o/api/v1/measurements?lim=100'
+    GET /pih2o/api/v1/measurements?lim=100
 
 .. code-block:: json
 
@@ -179,7 +179,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get measurements from a specific sensor**::
 
-    GET /pih2o/api/v1/measurements?sensor=3'
+    GET /pih2o/api/v1/measurements?sensor=3
 
 .. code-block:: json
 
@@ -202,7 +202,7 @@ and the address is truncated (URL without scheme, domain and port).
 
 **Get measurements using several query string filters**::
 
-    GET /pih2o/api/v1/measurements?sensor=3&humidity=44.0'
+    GET /pih2o/api/v1/measurements?sensor=3&humidity=44.0
 
 .. code-block:: json
 
