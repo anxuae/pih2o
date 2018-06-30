@@ -15,6 +15,7 @@ class Pump(object):
 
         self.pin = pin
         GPIO.setup(pin, GPIO.OUT)
+        GPIO.output(self.pin, GPIO.LOW)
 
     def is_running(self):
         """
