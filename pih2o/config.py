@@ -128,7 +128,7 @@ class PiConfigParser(ConfigParser):
             LOGGER.info("Remove the auto-startup file in '%s'", dirname)
             os.remove(filename)
 
-    def editor(self):
+    def open_editor(self):
         """Open a text editor to edit the configuration file.
         """
         for editor in self.editors:

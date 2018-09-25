@@ -272,7 +272,7 @@ def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
 
     if options.config:
         LOGGER.info("Editing the automatic plant watering configuration...")
-        config.editor()
+        config.open_editor()
         sys.exit(0)
     elif not options.reset:
         LOGGER.info("Starting the automatic plant watering application...")
