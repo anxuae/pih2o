@@ -10,9 +10,6 @@ import Adafruit_ADS1x15
 from pih2o.utils import LOGGER
 
 
-adc = Adafruit_ADS1x15.ADS1115()
-
-
 class HumiditySensor(object):
 
     """
@@ -75,13 +72,21 @@ class DigitalHumiditySensor(HumiditySensor):
 
 class AnalogHumiditySensor(HumiditySensor):
 
+    adc = None
     stype = 'analog'
+
+    def __init__(self, *args, **kwargs):
+        HumiditySensor.__init__(self, *args, **kwargs)
+
+        if not AnalogHumiditySensor.adc:
+            # Ensure uniq connection to ADS1x15
+            AnalogHumiditySensor.adc = Adafruit_ADS1x15.ADS1115()
 
     def _read(self):
         """Return the humidity level (in %) measured by the sensor.
         """
         # Choose gain 1 because the sensor range is +/-4.096V
-        value = adc.read_adc(self.pin, gain=1)
+        value = self.adc.read_adc(self.pin, gain=1)
         if value < min(self.analog_range) or value > max(self.analog_range):
             LOGGER.warning("Sensor %s value '%s' is outside the defined range %s", self.pin, value, self.analog_range)
         return 100 - (value - min(self.analog_range)) * 100. / (max(self.analog_range) - min(self.analog_range))
