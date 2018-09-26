@@ -241,7 +241,7 @@ class PiApplication(object):
 
 
 def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
-    """Application factory.
+    """Entry point to use with a WSGI server (e.g. gunicorn).
     """
     parser = argparse.ArgumentParser(usage="%(prog)s [options]", description=pih2o.__doc__)
 
@@ -283,6 +283,12 @@ def create_app(cfgfile="~/.config/pih2o/pih2o.cfg"):
         sys.exit(0)
 
 
-if __name__ == '__main__':
+def main():
+    """Entry point in case of 'direct' run (without WSGI server)
+    """
     app = create_app()
     app.run(use_reloader=False)  # Dont want to start the daemon 2 times
+
+
+if __name__ == '__main__':
+    main()
