@@ -15,37 +15,46 @@ def test_server_is_up(client):
 def test_get_config(client):
     resp = client.get('/pih2o/api/v1/config')
     assert resp.status_code == 200
-    assert json.loads(resp.data)["GENERAL"]["autostart"] is True
+    assert json.loads(resp.data)["GENERAL"]["autostart"] == False
 
 
 def test_set_config(client, headers):
     resp = client.put('/pih2o/api/v1/config', headers=headers,
-                      data='{"GENERAL":{"autostart":false}}')
+                      data='{"GENERAL":{"autostart":true}}')
     assert resp.status_code == 204
+
+    resp = client.get('/pih2o/api/v1/config')
+    assert json.loads(resp.data)["GENERAL"]["autostart"] == True
 
 
 def test_get_config_section(client):
     resp = client.get('/pih2o/api/v1/config/GENERAL')
     assert resp.status_code == 200
-    assert json.loads(resp.data)["autostart"] is True
+    assert json.loads(resp.data)["autostart"] == False
 
 
 def test_set_config_section(client, headers):
     resp = client.put('/pih2o/api/v1/config/GENERAL', headers=headers,
-                      data='{"autostart":false}')
+                      data='{"autostart":true}')
     assert resp.status_code == 204
+
+    resp = client.get('/pih2o/api/v1/config/GENERAL')
+    assert json.loads(resp.data)["autostart"] == True
 
 
 def test_get_config_value(client):
     resp = client.get('/pih2o/api/v1/config/GENERAL/autostart')
     assert resp.status_code == 200
-    assert json.loads(resp.data) is True
+    assert json.loads(resp.data) == False
 
 
 def test_set_config_value(client, headers):
     resp = client.put('/pih2o/api/v1/config/GENERAL/autostart', headers=headers,
-                      data='false')
+                      data='true')
     assert resp.status_code == 204
+
+    resp = client.get('/pih2o/api/v1/config/GENERAL/autostart')
+    assert json.loads(resp.data) == True
 
 
 def test_start_pump(client):
@@ -61,14 +70,14 @@ def test_start_pump_with_duration(client):
 def test_get_sensors_list(client):
     resp = client.get('/pih2o/api/v1/sensors')
     assert resp.status_code == 200
-    assert json.loads(resp.data) == [1, 2, 3]
+    assert json.loads(resp.data) == [0, 1, 2]
 
 
 def test_read_one_sensor(client):
-    resp = client.get('/pih2o/api/v1/sensors/3')
+    resp = client.get('/pih2o/api/v1/sensors/2')
     assert resp.status_code == 200
     data = json.loads(resp.data)
-    assert data['sensor'] == 3
+    assert data['sensor'] == 2
 
 
 def test_get_10_measurements(client, db_data):
