@@ -35,4 +35,4 @@ Default configuration
     analog_pins = (0, 1, 2)
 
     # Sensor physical range measured with the ADS1115 (from wet to dry)
-    analog_range = (15900, 32800)
+    analog_range = (10000, 32800)

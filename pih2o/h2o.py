@@ -54,6 +54,7 @@ class PiApplication(object):
 
         LOGGER.debug("Initializing the RESTful API")
         self.api = Api(self.flask_app, catch_all_404s=True)
+
         root = '/pih2o/api/v1'
         self.api.add_resource(ApiConfig,
                               root + '/config',

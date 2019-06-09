@@ -23,7 +23,7 @@ PYTHON_TYPE_TO_FIELD = {
     unicode: fields.String,
     datetime: fields.DateTime,
     float: fields.Float,
-    int: fields.Integer,
+    int: fields.Integer(default=None),
     list: fields.List,
     tuple: fields.List,
     bool: fields.Boolean
@@ -38,12 +38,13 @@ class ApiConfig(Resource):
 
         self.fields = {}
         for section, options in config.DEFAULT.items():
+            values = {}
             for key, value in options.items():
                 if isinstance(value[0], (list, tuple)):
-                    self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[
-                        type(value[0])](PYTHON_TYPE_TO_FIELD[type(value[0][0])])
+                    values[key] = PYTHON_TYPE_TO_FIELD[type(value[0])](PYTHON_TYPE_TO_FIELD[type(value[0][0])])
                 else:
-                    self.fields.setdefault(section, {})[key] = PYTHON_TYPE_TO_FIELD[type(value[0])]
+                    values[key] = PYTHON_TYPE_TO_FIELD[type(value[0])]
+            self.fields[section] = fields.Nested(values)
 
     def get(self, section=None, key=None):
         if section and not self.cfg.has_section(section):
@@ -59,10 +60,13 @@ class ApiConfig(Resource):
             return self.cfg.getall(), 200
 
     def put(self, section=None, key=None):
+        if not request.json:
+            return "Bad content type: request shall be a JSON snippet", 415
+
         if section and key:
-            values = marshal({key: request.json}, self.fields[section], envelope=section)
+            values = marshal({key: request.json}, self.fields[section].nested, envelope=section)
         elif section:
-            values = marshal(request.json, self.fields[section], envelope=section)
+            values = marshal(request.json, self.fields[section].nested, envelope=section)
         else:
             values = marshal(request.json, self.fields)
 
@@ -70,6 +74,8 @@ class ApiConfig(Resource):
             for key, value in options.items():
                 if value is not None:
                     self.cfg.set(section, key, str(value))
+
+        self.cfg.save()
 
         return {}, 204
 
