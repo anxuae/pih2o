@@ -16,6 +16,12 @@ except ImportError:
     # Python 2.x fallback
     from ConfigParser import ConfigParser
 
+try:
+    input = raw_input
+except NameError:
+    # Python 3.x fallback
+    pass
+
 
 def safe_eval(value):
     """Safely evaluate a string.
@@ -82,8 +88,10 @@ class PiConfigParser(ConfigParser):
             self.save(True)
 
             if osp.isfile(self.db_filename):
-                LOGGER.info("Dropping all measurements from database '%s'", self.db_filename)
-                os.remove(self.db_filename)
+                resp = input("You really want to erase the current database? (y/N)")
+                if resp in ('y', 'yes', 'Y', 'YES'):
+                    LOGGER.info("Dropping all measurements from database '%s'", self.db_filename)
+                    os.remove(self.db_filename)
 
         self.reload()
 
