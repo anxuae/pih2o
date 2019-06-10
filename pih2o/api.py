@@ -103,8 +103,12 @@ class ApiSensors(Resource):
     def get(self, pin=None):
         if pin is None:
             return [sensor.pin for sensor in self.app.sensors], 200
-        else:
-            return self.app.read_sensors(pin)[0].json(), 200
+
+        data = self.app.read_sensors(pin)
+        if data:
+            return data[0].json(), 200
+
+        return "Invalid sensor '{}' (ID == connection pin)".format(pin), 415
 
 
 class ApiMeasurements(Resource):
