@@ -5,6 +5,11 @@ This document describe the API exposed by ``pih2o``. The syntax used is close
 to the ``curl`` one, but for readability reasons, not all options are written
 and the address is truncated (URL without scheme, domain and port).
 
+It can be necessary to precise the content type of the request in the ``curl``
+command by adding the option::
+
+    -H "Content-Type: application/json"
+
 .. contents:: API Contents:
 
 

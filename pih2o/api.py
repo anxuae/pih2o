@@ -60,20 +60,29 @@ class ApiConfig(Resource):
             return self.cfg.getall(), 200
 
     def put(self, section=None, key=None):
-        if not request.json:
-            return "Bad content type: request shall be a JSON snippet", 415
+        if section and not self.cfg.has_section(section):
+            return {"message": "Invalid section '{}'".format(section)}, 400
+        if key and not self.cfg.has_option(section, key):
+            return {"message": "Invalid key '{}' in section '{}'".format(key, section)}, 400
+
+        json_data = request.get_json(force=True)
 
         if section and key:
-            values = marshal({key: request.json}, self.fields[section].nested, envelope=section)
+            values = marshal({key: json_data}, self.fields[section].nested, envelope=section)
         elif section:
-            values = marshal(request.json, self.fields[section].nested, envelope=section)
+            values = marshal(json_data, self.fields[section].nested, envelope=section)
         else:
-            values = marshal(request.json, self.fields)
+            values = marshal(json_data, self.fields)
 
+        updated = False
         for section, options in values.items():
             for key, value in options.items():
                 if value is not None:
                     self.cfg.set(section, key, str(value))
+                    updated = True
+
+        if not updated:
+            return {"message": "Invalid data '{}', configuration not updated".format(json_data)}, 400
 
         self.cfg.save()
 
