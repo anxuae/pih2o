@@ -9,6 +9,10 @@ It can be necessary to precise the content type of the request in the ``curl``
 command by adding the option::
 
     -H "Content-Type: application/json"
+    
+Example::
+    
+    curl -H "Content-Type: application/json" -XGET pi@raspberrypi:/pih2o/api/v1/config
 
 .. contents:: API Contents:
 
